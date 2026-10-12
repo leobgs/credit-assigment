@@ -16,17 +16,14 @@ public class AngsuranController : ControllerBase
     }
 
     [HttpGet("hitung")]
-    public ActionResult<HitungAngsuranResponse> Hitung(
-        [FromQuery] decimal plafon,
-        [FromQuery] decimal bunga,
-        [FromQuery] int tenor)
+    public ActionResult<HitungAngsuranResponse> Hitung([FromQuery] HitungAngsuranRequest request)
     {
-        decimal angsuranPerBulan = _calculator.HitungAngsuranPerBulan(plafon, bunga, tenor);
+        decimal angsuranPerBulan = _calculator.HitungAngsuranPerBulan(request.Plafon, request.Bunga, request.Tenor);
 
         return Ok(new HitungAngsuranResponse(
-            plafon,
-            bunga,
-            tenor,
+            request.Plafon,
+            request.Bunga,
+            request.Tenor,
             angsuranPerBulan
         ));
     }

@@ -6,7 +6,7 @@ Proyek ini dibangun berdasarkan spesifikasi **Take Home Test Senior Back-End Dev
 
 ---
 
-## 1. Prerequisite
+## 1. Prerequisite & Catatan Environment Mac
 
 | Kebutuhan | Versi | Keterangan |
 | --- | --- | --- |
@@ -15,6 +15,22 @@ Proyek ini dibangun berdasarkan spesifikasi **Take Home Test Senior Back-End Dev
 | dotnet-ef CLI | 8.x | EF Core Command-Line Tools |
 | Git | Terbaru | Version control |
 | Docker (Opsional) | Terbaru | Alternatif menjalankan PostgreSQL 16 |
+
+> **Catatan Pengguna macOS (Apple Silicon / Intel):**  
+> .NET 8 SDK telah terpasang di `$HOME/.dotnet`. Jika membuka terminal baru dan perintah `dotnet` belum terbaca, muat konfigurasi shell dengan perintah:
+> ```bash
+> source ~/.zshrc
+> ```
+> Atau set environment variable:
+> ```bash
+> export DOTNET_ROOT="$HOME/.dotnet"
+> export PATH="$DOTNET_ROOT:$DOTNET_ROOT/tools:$PATH"
+> ```
+> Verifikasi:
+> ```bash
+> dotnet --version      # 8.0.x
+> dotnet ef --version   # 8.0.x
+> ```
 
 ---
 
@@ -27,19 +43,19 @@ Proyek ini dibangun berdasarkan spesifikasi **Take Home Test Senior Back-End Dev
    psql -U postgres -c "CREATE DATABASE kredit_db;"
    ```
 
-2. Jalankan migrasi Entity Framework Core:
+2. Jalankan migrasi Entity Framework Core untuk membuat tabel dan index:
    ```bash
    dotnet ef database update --project PengajuanKredit.Api
    ```
 
-3. (Opsional) Mengisi data awal (seed):
+3. (Opsional) Masukkan data contoh (seed):
    ```bash
    psql -U postgres -d kredit_db -f db/seed.sql
    ```
 
 ### 2.2 Alternatif Menggunakan Docker
 
-Jalankan container PostgreSQL 16.3:
+Jika memilih menjalankan PostgreSQL melalui container Docker:
 ```bash
 docker run --name pg16 -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:16.3
 docker exec -it pg16 psql -U postgres -c "CREATE DATABASE kredit_db;"
@@ -58,6 +74,7 @@ dotnet user-secrets init
 dotnet user-secrets set "Jwt:Key" "SuperSecretKeyForJwtAuthenticationMustBeAtLeast32CharsLong!"
 dotnet user-secrets set "Auth:Username" "admin"
 dotnet user-secrets set "Auth:Password" "Password123!"
+cd ..
 ```
 
 **Kredensial Login Default:**
@@ -66,38 +83,86 @@ dotnet user-secrets set "Auth:Password" "Password123!"
 
 ---
 
-## 4. Cara Menjalankan Aplikasi & Swagger
+## 4. Cara Menjalankan Aplikasi & Mengakses Swagger UI
 
-Jalankan aplikasi dari root direktori:
+### 4.1 Menjalankan Server API
+
+Dari root direktori project, jalankan:
 
 ```bash
 dotnet run --project PengajuanKredit.Api
 ```
 
-Aplikasi akan berjalan pada port lokal. Buka browser pada URL:
-- **Swagger UI:** `http://localhost:5000/swagger` atau `https://localhost:5001/swagger`
+Aplikasi akan berjalan dan menampilkan log di console. Port default umumnya:
+- **HTTP:** `http://localhost:5000` atau `http://localhost:5242`
+- **HTTPS:** `https://localhost:5001` atau `https://localhost:7142`
 
-Untuk mencoba endpoint di Swagger UI:
-1. Panggil endpoint `POST /api/auth/login` dengan username `admin` dan password `Password123!`.
-2. Salin token dari response.
-3. Klik tombol **Authorize** di pojok kanan atas Swagger, masukkan `Bearer <token>`, lalu klik **Authorize**.
+Buka browser dan akses Swagger UI pada:
+```text
+http://localhost:5000/swagger
+```
+*(atau sesuaikan dengan port yang muncul di output terminal)*
+
+### 4.2 Alur Autentikasi di Swagger UI:
+1. Scroll ke endpoint **POST `/api/auth/login`**.
+2. Klik **Try it out**, masukkan body JSON:
+   ```json
+   {
+     "username": "admin",
+     "password": "Password123!"
+   }
+   ```
+3. Klik **Execute**, salin nilai `token` dari response.
+4. Klik tombol hijau **Authorize** di pojok kanan atas Swagger UI.
+5. Masukkan format: `Bearer <token_yang_disalin>`, lalu klik **Authorize**.
+6. Sekarang semua endpoint terproteksi (`/api/pengajuan-kredit` dan `/api/angsuran/hitung`) dapat diuji langsung dari Swagger.
+
+### 4.3 Menguji Menggunakan `curl` (Terminal)
+
+1. **Login & Dapatkan Token:**
+   ```bash
+   TOKEN=$(curl -s -X POST http://localhost:5000/api/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"username":"admin","password":"Password123!"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4)
+   echo $TOKEN
+   ```
+
+2. **Hitung Angsuran:**
+   ```bash
+   curl -X GET "http://localhost:5000/api/angsuran/hitung?plafon=100000000&bunga=12&tenor=60" \
+     -H "Authorization: Bearer $TOKEN"
+   ```
+
+3. **Buat Pengajuan Kredit Baru:**
+   ```bash
+   curl -X POST http://localhost:5000/api/pengajuan-kredit \
+     -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"plafon": 100000000, "bunga": 12, "tenor": 60}'
+   ```
+
+4. **Lihat Daftar Pengajuan (Paginasi):**
+   ```bash
+   curl -X GET "http://localhost:5000/api/pengajuan-kredit?page=1&pageSize=10" \
+     -H "Authorization: Bearer $TOKEN"
+   ```
 
 ---
 
 ## 5. Cara Menjalankan Test (xUnit)
 
-Jalankan seluruh rangkaian unit test dan integration test:
+Jalankan seluruh 36 skenario test:
 
 ```bash
 dotnet test
 ```
 
-Seluruh 36 skenario test mencakup:
-- Formula kalkulasi angsuran anuitas dan validasi rentang input.
-- CRUD PengajuanKreditService dengan EF Core InMemory.
-- Autentikasi dan otorisasi JWT (status 401 dan 200).
-- ExceptionHandlingMiddleware (status 400, 404, dan 500 tanpa kebocoran stack trace).
-- RequestLoggingMiddleware (pencatatan durasi dan proteksi token/password).
+Semua pengujian mencakup:
+- Formula anuitas kalkulator angsuran dan validasi rentang nilai.
+- Operasi CRUD `PengajuanKreditService` dengan EF Core InMemory.
+- Autentikasi & otorisasi JWT (status 401 dan 200).
+- `ExceptionHandlingMiddleware` (status 400, 404, dan 500 tanpa kebocoran stack trace).
+- `RequestLoggingMiddleware` (pencatatan durasi dan proteksi token/password).
 
 ---
 
@@ -117,7 +182,7 @@ Seluruh 36 skenario test mencakup:
 
 ## 7. Ekspor Database
 
-File backup database sudah diekspor ke `kredit_db.sql`:
+File backup database telah diekspor ke `kredit_db.sql`:
 
 ```bash
 pg_dump -U postgres -d kredit_db -F p -f kredit_db.sql

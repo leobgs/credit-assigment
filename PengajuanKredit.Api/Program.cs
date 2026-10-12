@@ -8,8 +8,19 @@ using Microsoft.OpenApi.Models;
 using PengajuanKredit.Api.Data;
 using PengajuanKredit.Api.Middleware;
 using PengajuanKredit.Api.Services;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog (Console & File rolling harian ke logs/log-.txt)
+builder.Host.UseSerilog((context, services, configuration) =>
+{
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .Enrich.FromLogContext()
+        .WriteTo.Console()
+        .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day);
+});
 
 // Add Database Context
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -85,9 +96,11 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// 1. Global Exception Handling harus berada di paling awal pipeline agar dapat menangkap
-// seluruh exception yang tidak tertangani dari middleware atau layer di bawahnya.
+// 1. ExceptionHandlingMiddleware di awal agar dapat menangkap seluruh exception dari bawah
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+// 2. RequestLoggingMiddleware untuk mencatat request & response tanpa bocor data sensitif
+app.UseMiddleware<RequestLoggingMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

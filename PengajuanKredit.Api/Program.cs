@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PengajuanKredit.Api.Data;
+using PengajuanKredit.Api.Middleware;
 using PengajuanKredit.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -83,6 +84,10 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+// 1. Global Exception Handling harus berada di paling awal pipeline agar dapat menangkap
+// seluruh exception yang tidak tertangani dari middleware atau layer di bawahnya.
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

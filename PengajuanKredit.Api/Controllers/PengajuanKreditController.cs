@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PengajuanKredit.Api.Dtos;
-using PengajuanKredit.Api.Exceptions;
 using PengajuanKredit.Api.Services;
 
 namespace PengajuanKredit.Api.Controllers;
@@ -42,20 +41,8 @@ public class PengajuanKreditController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var result = await _service.GetByIdAsync(id, cancellationToken);
-            return Ok(result);
-        }
-        catch (NotFoundException ex)
-        {
-            return NotFound(new ProblemDetails
-            {
-                Status = StatusCodes.Status404NotFound,
-                Title = "Data Tidak Ditemukan",
-                Detail = ex.Message
-            });
-        }
+        var result = await _service.GetByIdAsync(id, cancellationToken);
+        return Ok(result);
     }
 
     [HttpPut("{id:guid}")]
@@ -64,20 +51,8 @@ public class PengajuanKreditController : ControllerBase
         [FromBody] UpdatePengajuanKreditRequest request,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var result = await _service.UpdateAsync(id, request, cancellationToken);
-            return Ok(result);
-        }
-        catch (NotFoundException ex)
-        {
-            return NotFound(new ProblemDetails
-            {
-                Status = StatusCodes.Status404NotFound,
-                Title = "Data Tidak Ditemukan",
-                Detail = ex.Message
-            });
-        }
+        var result = await _service.UpdateAsync(id, request, cancellationToken);
+        return Ok(result);
     }
 
     [HttpDelete("{id:guid}")]
@@ -85,19 +60,7 @@ public class PengajuanKreditController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            await _service.DeleteAsync(id, cancellationToken);
-            return NoContent();
-        }
-        catch (NotFoundException ex)
-        {
-            return NotFound(new ProblemDetails
-            {
-                Status = StatusCodes.Status404NotFound,
-                Title = "Data Tidak Ditemukan",
-                Detail = ex.Message
-            });
-        }
+        await _service.DeleteAsync(id, cancellationToken);
+        return NoContent();
     }
 }

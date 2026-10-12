@@ -11,6 +11,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddScoped<IAngsuranCalculator, AngsuranCalculator>();
+builder.Services.AddScoped<IPengajuanKreditService, PengajuanKreditService>();
 
 builder.Services.AddControllers();
 

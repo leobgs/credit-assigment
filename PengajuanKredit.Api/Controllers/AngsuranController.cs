@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PengajuanKredit.Api.Dtos;
 using PengajuanKredit.Api.Services;
 
 namespace PengajuanKredit.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class AngsuranController : ControllerBase

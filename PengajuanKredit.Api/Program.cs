@@ -9,6 +9,8 @@ using PengajuanKredit.Api.Data;
 using PengajuanKredit.Api.Middleware;
 using PengajuanKredit.Api.Services;
 using Serilog;
+// Izinkan DateTime Utc disimpan ke kolom timestamp without time zone di PostgreSQL
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -72,11 +74,12 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "PengajuanKredit API", Version = "v1" });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "Masukkan token JWT dengan format: Bearer {token}",
+        Description = "Masukkan token JWT Anda",
         Name = "Authorization",
         In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT"
     });
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
@@ -103,7 +106,10 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<RequestLoggingMiddleware>();
 
 // Configure the HTTP request pipeline.
-app.UseSwagger();
+app.UseSwagger(c =>
+{
+    c.SerializeAsV2 = true;
+});
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "PengajuanKredit API v1");

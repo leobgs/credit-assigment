@@ -229,3 +229,83 @@ Dua query SQL yang diminta pada Soal 1 tersedia di file `db/schema.sql`:
    ```
 
 ---
+
+## 9. Jawaban Soal 6 & 7 (Ringkasan)
+
+> Jawaban lengkap beserta diagram Mermaid tersedia di [`docs/JAWABAN_SOAL_6_7.md`](docs/JAWABAN_SOAL_6_7.md).
+
+### 9.1 Arsitektur Enterprise
+
+```
+Client -> Load Balancer -> API Gateway (rate limit, routing, JWT check)
+   -> Auth Service (Identity/JWT) -> User DB
+   -> Kredit Service -> Redis (cache) -> PostgreSQL (primary + read replica)
+   -> Message Broker -> Service lain (notifikasi, audit)
+Logging & monitoring: Serilog -> ELK/Seq, Prometheus + Grafana
+```
+
+Diagram visual dibuat pada saat penulisan dokumen jawaban final (draw.io atau Mermaid).
+
+### 9.2 CI/CD dan DevOps
+
+- **Pipeline:** build, restore, `dotnet test`, analisis kode statis, build Docker image, push ke registry, deploy ke staging, smoke test, deploy ke production.
+- **Deployment aman dan scalable:** migrasi database terkontrol, secret di vault/secret manager, rolling update atau blue-green, health check dan readiness probe, auto-scaling (HPA), serta rollback otomatis bila gagal.
+
+### 9.3 Leadership dan Code Review
+
+- **Code review:** Pull Request kecil dengan checklist (kebenaran, keterbacaan, test, keamanan, performa), review konstruktif dan menjelaskan alasan, otomatisasi lint/test lewat CI.
+- **Mentoring junior:** pair programming, tugas bertahap dengan tanggung jawab meningkat, feedback rutin 1:1, sharing session, dan dokumentasi standar tim.
+
+### 9.4 Problem Solving
+
+- **Lonjakan traffic:** cek monitoring dan metrik, aktifkan auto-scaling, perkuat cache dan rate limiting, identifikasi bottleneck (DB atau API), lalu lakukan postmortem.
+- **Bug hanya di production:** reproduksi lewat log dan trace, bandingkan konfigurasi dan data antar environment, gunakan feature flag atau canary, perbaiki dengan hotfix dan tambahkan test regresi.
+- **Perubahan di luar requirement:** catat sebagai change request, analisis dampak (waktu, biaya, risiko), diskusikan prioritas dengan stakeholder, minta persetujuan tertulis, lalu masukkan ke backlog atau sprint berikutnya.
+
+---
+
+## 10. Cara Pengumpulan
+
+### 10.1 Ekspor Database
+
+Database telah diekspor dalam tiga format:
+
+| Format | File | Keterangan |
+| ------ | ---- | ---------- |
+| SQL dump | `kredit_db.sql` | Full dump `pg_dump` (schema + data) |
+| SQL schema | `db/schema.sql` | DDL tabel, index, dan query Soal 1 |
+| SQL seed | `db/seed.sql` | Data contoh awal |
+| CSV | `db/csv/pengajuan_kredit.csv` | Ekspor data tabel ke CSV |
+
+### 10.2 Source Code (1 File ZIP)
+
+File ZIP pengumpulan tersedia di Desktop:
+
+```
+~/Desktop/PengajuanKredit-Submission.zip
+```
+
+Isi ZIP mencakup seluruh source code project .NET 8 (tanpa folder `bin/`, `obj/`, `.git/`, `logs/`).
+
+**Untuk membuat ulang ZIP:**
+
+```bash
+cd /Users/user/private/credit-assigment
+zip -r ~/Desktop/PengajuanKredit-Submission.zip . \
+  -x ".git/*" "*/bin/*" "*/obj/*" "*/logs/*" ".vscode/*" "*.DS_Store"
+```
+
+### 10.3 Isi Pengumpulan
+
+| No  | Item                                     | Status       |
+| --- | ---------------------------------------- | ------------ |
+| 1   | Project .NET 8 (1 file ZIP)              | ✅ Selesai    |
+| 2   | Ekspor database (SQL + CSV)              | ✅ Selesai    |
+| 3   | Index `plafon` dan `tenor`               | ✅ Selesai    |
+| 4   | Query SQL (Soal 1)                       | ✅ Selesai    |
+| 5   | CRUD + JWT + Validasi (Soal 2)           | ✅ Selesai    |
+| 6   | API Angsuran Anuitas (Soal 3)            | ✅ Selesai    |
+| 7   | Unit Test lulus (Soal 4)                 | ✅ Selesai    |
+| 8   | Error Handling + Serilog (Soal 5)        | ✅ Selesai    |
+| 9   | Jawaban Soal 6 & 7 (dengan diagram)     | ✅ Selesai    |
+| 10  | README cara menjalankan                  | ✅ Selesai    |

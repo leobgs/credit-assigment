@@ -93,4 +93,28 @@ public class PengajuanKreditServiceTests
         var act = async () => await service.GetByIdAsync(created.Id);
         await act.Should().ThrowAsync<NotFoundException>();
     }
+
+    [Fact]
+    public async Task GetAllAsync_DenganPaginasi_MengembalikanDataTerpaginasi()
+    {
+        // Arrange
+        using var context = CreateInMemoryDbContext();
+        var calculator = new AngsuranCalculator();
+        var service = new PengajuanKreditService(context, calculator);
+
+        for (int i = 1; i <= 15; i++)
+        {
+            await service.CreateAsync(new CreatePengajuanKreditRequest(i * 1_000_000m, 10m, 12));
+        }
+
+        // Act: Page 1, PageSize 10
+        var pagedResult = await service.GetAllAsync(page: 1, pageSize: 10);
+
+        // Assert
+        pagedResult.TotalCount.Should().Be(15);
+        pagedResult.TotalPages.Should().Be(2);
+        pagedResult.Page.Should().Be(1);
+        pagedResult.PageSize.Should().Be(10);
+        pagedResult.Items.Should().HaveCount(10);
+    }
 }

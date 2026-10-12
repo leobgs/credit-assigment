@@ -21,6 +21,7 @@ namespace PengajuanKredit.Tests.Middleware;
 public class ExceptionHandlingMiddlewareTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly WebApplicationFactory<Program> _factory;
+    private readonly string _databaseName = "TestDb_ErrorHandling_" + Guid.NewGuid();
 
     public ExceptionHandlingMiddlewareTests(WebApplicationFactory<Program> factory)
     {
@@ -36,7 +37,7 @@ public class ExceptionHandlingMiddlewareTests : IClassFixture<WebApplicationFact
 
                 services.AddDbContext<AppDbContext>(options =>
                 {
-                    options.UseInMemoryDatabase("TestDb_ErrorHandling_" + Guid.NewGuid());
+                    options.UseInMemoryDatabase(_databaseName);
                 });
             });
         });

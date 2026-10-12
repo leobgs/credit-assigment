@@ -13,6 +13,7 @@ namespace PengajuanKredit.Tests.Controllers;
 public class AuthAndAuthorizationTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly WebApplicationFactory<Program> _factory;
+    private readonly string _databaseName = "TestDb_Auth_" + Guid.NewGuid();
 
     public AuthAndAuthorizationTests(WebApplicationFactory<Program> factory)
     {
@@ -29,7 +30,7 @@ public class AuthAndAuthorizationTests : IClassFixture<WebApplicationFactory<Pro
 
                 services.AddDbContext<AppDbContext>(options =>
                 {
-                    options.UseInMemoryDatabase("TestDb_Auth_" + Guid.NewGuid());
+                    options.UseInMemoryDatabase(_databaseName);
                 });
             });
         });
